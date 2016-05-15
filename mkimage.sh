@@ -1,15 +1,13 @@
 #! /bin/bash
 
 # Install a bog-standard Debian bootable for ODROID XU3/XU4.
-# Note that this will only work for SD cards; MMC devices
-# have a different layout. See
-# /usr/share/doc/u-boot-exynos/README.odroid.gz for more details.
 #
 # Note: You will need u-boot-exynos >= 2016.05~rc3+dfsg1-1,
 # which at the time of writing is in experimental (it will
 # probably eventually hit stretch).
 #
-# Beware: This will ERASE ALL DATA on the target SD card.
+# Beware: This will ERASE ALL DATA on the target SD card
+# or MMC partition.
 #
 #
 # Copyright 2016 Steinar H. Gunderson <steinar+odroid@gunderson.no>.
@@ -20,8 +18,9 @@ set -e
 DEVICE=
 BOOTPART_MB=256
 SUITE=stretch
+TYPE=sd
 
-while getopts "b:s:" opt; do
+while getopts "b:s:t:" opt; do
 	case $opt in
 		b)
 			BOOTPART_MB=$OPTARG
@@ -29,6 +28,9 @@ while getopts "b:s:" opt; do
 		s)
 			# Sorry, jessie won't work; the kernel doesn't support XU3/XU4.
 			SUITE=$OPTARG
+			;;
+		t)
+			TYPE=$OPTARG
 			;;
 		:)
 			echo "Option -$OPTARG requires an argument."
@@ -40,11 +42,16 @@ shift $((OPTIND - 1))
 
 DEVICE=$1
 if [ ! -b "$DEVICE" ]; then
-	echo "Usage: $0 [-b BOOTPARTITION_SIZE] [-s SUITE] DEVICE [OTHER_DEBOOTSTRAP_ARGS...]"
+	echo "Usage: $0 [-b BOOTPARTITION_SIZE] [-s SUITE] [-t sd|mmc] DEVICE [OTHER_DEBOOTSTRAP_ARGS...]"
 	echo "DEVICE is an SD card device, e.g. /dev/sdb."
 	exit 1
 fi
 shift
+
+if [ "$TYPE" != "sd" ] && [ "$TYPE" != "mmc" ]; then
+	echo "Card type must be 'sd' or 'mmc'."
+	exit 1
+fi
 
 set -x
 
@@ -77,11 +84,18 @@ else
 fi
 
 # Put the different stages of U-Boot into the right place.
-# The offsets come from README.odroid.gz.
-dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/bl1.bin.hardkernel of=${DEVICE} seek=1 conv=sync
-dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/bl2.bin.hardkernel.1mb_uboot of=${DEVICE} seek=31 conv=sync
-dd if=/usr/lib/u-boot/odroid-xu3/u-boot-dtb.bin of=${DEVICE} seek=63 conv=sync
-dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/tzsw.bin.hardkernel of=${DEVICE} seek=2111 conv=sync
+# The offsets come from /usr/share/doc/u-boot-exynos/README.odroid.gz.
+if [ "$TYPE" = "sd" ]; then
+	UBOOT_DEVICE=${DEVICE}
+	UBOOT_OFFSET=1
+else
+	UBOOT_DEVICE=${DEVICE}boot0
+	UBOOT_OFFSET=0
+fi
+dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/bl1.bin.hardkernel of=${UBOOT_DEVICE} seek=${UBOOT_OFFSET} conv=sync
+dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/bl2.bin.hardkernel.1mb_uboot of=${UBOOT_DEVICE} seek=$((UBOOT_OFFSET + 30)) conv=sync
+dd if=/usr/lib/u-boot/odroid-xu3/u-boot-dtb.bin of=${UBOOT_DEVICE} seek=$((UBOOT_OFFSET + 62)) conv=sync
+dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/tzsw.bin.hardkernel of=${UBOOT_DEVICE} seek=$((UBOOT_OFFSET + 2110)) conv=sync
 
 # Clear out the environment.
 dd if=/dev/zero of=${DEVICE} seek=2560 count=32 bs=512 conv=sync

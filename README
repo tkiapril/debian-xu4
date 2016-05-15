@@ -5,7 +5,20 @@ The image is signed with my GnuPG key; you can find the key in the
 Debian keyring.
 
 The prebuilt images are made for 1GB cards, so they should fit onto
-pretty much any modern SD card.
+pretty much any modern SD or MMC card. Root images built for SD cards
+will fit work on MMC devices but not the other way round (the prebuilt
+root images are for SD).
+
+If you want to update the boot partition of an eMMC device (where
+U-Boot lives), you will need to unlock it before Linux lets you
+write to it, e.g.:
+
+  echo 0 > /sys/block/mmcblk0boot0/force_ro
+
+SD cards do not have hardware partitions (U-Boot is stored on the same
+block device as everything else), so all you need to do is to decompress
+the image and dd it to the card.
+
 
 Prebuilt images: https://storage.sesse.net/debian-xu4/
 ODROID forum thread: http://forum.odroid.com/viewtopic.php?f=96&t=21256
