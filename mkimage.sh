@@ -90,7 +90,8 @@ dd if=/dev/zero of=${DEVICE} seek=2560 count=32 bs=512 conv=sync
 # from ext4, but using FAT is somehow traditional and less likely to be broken
 # at any given time. (It doesn't support symlinks, though, which breaks flash-kernel,
 # but we don't use that anyway.)
-mkfs.vfat -F 32 ${DEVICE_STEM}1
+BOOT_PART=${DEVICE_STEM}1
+mkfs.vfat -F 32 ${BOOT_PART}
 
 # Put an LVM on the other partition; it's easier to deal with when expanding
 # partitions or otherwise moving them around.
@@ -109,7 +110,7 @@ mkfs.ext4 /dev/odroid/root
 mkdir -p /mnt/xu4/
 mount /dev/odroid/root /mnt/xu4
 mkdir /mnt/xu4/boot/
-mount ${DEVICE_STEM}1 /mnt/xu4/boot
+mount ${BOOT_PART} /mnt/xu4/boot
 debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --foreign --arch armhf ${SUITE} /mnt/xu4 "$@"
 
 # Run the second stage debootstrap under qemu (via binfmt_misc).
@@ -125,7 +126,7 @@ if [ "$SUITE" != "unstable" ] && [ "$SUITE" != "sid" ]; then
 fi
 
 # Create an fstab (this is normally done by partconf, in d-i).
-BOOT_UUID=$( blkid -s UUID -o value ${DEVICE_STEM}1 )
+BOOT_UUID=$( blkid -s UUID -o value ${BOOT_PART} )
 cat <<EOF > /mnt/xu4/etc/fstab
 # /etc/fstab: static file system information.
 #
