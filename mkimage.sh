@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 # Install a bog-standard Debian bootable for ODROID XU3/XU4.
 # Note that this will only work for SD cards; MMC devices
@@ -16,25 +16,37 @@
 # Licensed under the GNU GPL, v2 or (at your option) any later version.
 
 set -e
-set -x
+
+DEVICE=
+BOOTPART_MB=256
+SUITE=stretch
+
+while getopts "b:s:" opt; do
+	case $opt in
+		b)
+			BOOTPART_MB=$OPTARG
+			;;
+		s)
+			# Sorry, jessie won't work; the kernel doesn't support XU3/XU4.
+			SUITE=$OPTARG
+			;;
+		:)
+			echo "Option -$OPTARG requires an argument."
+			exit 1
+			;;
+	esac
+done
+shift $((OPTIND - 1))
 
 DEVICE=$1
-BOOTPART_MB=$2
-
-if [ ! -b "$DEVICE" ] || [ ! "$BOOTPART_MB" -gt 0 ]; then
-	echo "Usage: $0 DEVICE BOOTPARTITION_SIZE [SUITE [OTHER_DEBOOTSTRAP_ARGS...]]"
+if [ ! -b "$DEVICE" ]; then
+	echo "Usage: $0 [-b BOOTPARTITION_SIZE] [-s SUITE] DEVICE [OTHER_DEBOOTSTRAP_ARGS...]"
 	echo "DEVICE is an SD card device, e.g. /dev/sdb."
 	exit 1
 fi
-shift 2
+shift
 
-SUITE=$1
-if [ -z "$SUITE" ]; then
-	# Sorry, jessie won't work; the kernel doesn't support XU3/XU4.
-	SUITE=stretch
-else
-	shift
-fi
+set -x
 
 # Prerequisites.
 dpkg --add-architecture armhf
