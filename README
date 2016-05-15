@@ -1,0 +1,15 @@
+These are images for the ODROID XU3/XU4, built as close as possible 
+to unmodified Debian. They will only be updated every now and then,
+so if you want something current, run the script to build them yourself.
+The image is signed with my GnuPG key; you can find the key in the
+Debian keyring.
+
+The prebuilt images are made for 1GB cards, so they should fit onto
+pretty much any modern SD card.
+
+Prebuilt images: https://storage.sesse.net/debian-xu4/
+ODROID forum thread: http://forum.odroid.com/viewtopic.php?f=96&t=21256
+Latest version of the build script: https://git.sesse.net/?p=debian-xu4;a=blob_plain;f=mkimage.sh;hb=HEAD
+git repository for the build script: https://git.sesse.net/?p=debian-xu4
+
+  - Steinar H. Gunderson <sesse@debian.org>
