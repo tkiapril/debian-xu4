@@ -169,6 +169,9 @@ echo odroid > /mnt/xu4/etc/hostname
 # Work around Debian bug #824391.
 echo ttySAC2 >> /mnt/xu4/etc/securetty
 
+# Work around Debian bug #825026.
+echo ledtrig-heartbeat >> /mnt/xu4/etc/modules
+
 # Install GRUB, chainloaded from U-Boot via UEFI.
 mount --bind /dev /mnt/xu4/dev
 mount --bind /proc /mnt/xu4/proc
