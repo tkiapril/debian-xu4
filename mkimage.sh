@@ -42,14 +42,14 @@ shift $((OPTIND - 1))
 
 DEVICE=$1
 if [ ! -b "$DEVICE" ]; then
-	echo "Usage: $0 [-b BOOTPARTITION_SIZE] [-s SUITE] [-t sd|mmc] DEVICE [OTHER_DEBOOTSTRAP_ARGS...]"
+	echo "Usage: $0 [-b BOOTPARTITION_SIZE] [-s SUITE] [-t sd|mmc|mmcbootonly] DEVICE [OTHER_DEBOOTSTRAP_ARGS...]"
 	echo "DEVICE is an SD card device, e.g. /dev/sdb."
 	exit 1
 fi
 shift
 
-if [ "$TYPE" != "sd" ] && [ "$TYPE" != "mmc" ]; then
-	echo "Card type must be 'sd' or 'mmc'."
+if [ "$TYPE" != "sd" ] && [ "$TYPE" != "mmc" ] && [ "$TYPE" != "mmcbootonly" ]; then
+	echo "Card type must be 'sd', 'mmc' or 'mmcbootonly'."
 	exit 1
 fi
 
@@ -67,20 +67,22 @@ if [ ! -d u-boot ]; then
 	git clone https://github.com/hardkernel/u-boot -b odroidxu3-v2012.07
 fi
 
-# Partition the device.
-parted ${DEVICE} mklabel msdos
-parted ${DEVICE} mkpart primary fat32 2MB $(( BOOTPART_MB + 2 ))MB
-parted ${DEVICE} set 1 boot on
-parted ${DEVICE} mkpart primary ext2 $(( BOOTPART_MB + 2))MB 100%
+if [ "$TYPE" != "mmcbootonly" ]; then
+	# Partition the device.
+	parted ${DEVICE} mklabel msdos
+	parted ${DEVICE} mkpart primary fat32 2MB $(( BOOTPART_MB + 2 ))MB
+	parted ${DEVICE} set 1 boot on
+	parted ${DEVICE} mkpart primary ext2 $(( BOOTPART_MB + 2))MB 100%
 
-# Figure out if the partitions are of type ${DEVICE}1 or ${DEVICE}p1.
-if [ -b "${DEVICE}1" ]; then
-	DEVICE_STEM=${DEVICE}
-elif [ -b "${DEVICE}p1" ]; then
-	DEVICE_STEM=${DEVICE}p
-else
-	echo "Could not find device files for partitions of ${DEVICE}. Exiting."
-	exit 1
+	# Figure out if the partitions are of type ${DEVICE}1 or ${DEVICE}p1.
+	if [ -b "${DEVICE}1" ]; then
+		DEVICE_STEM=${DEVICE}
+	elif [ -b "${DEVICE}p1" ]; then
+		DEVICE_STEM=${DEVICE}p
+	else
+		echo "Could not find device files for partitions of ${DEVICE}. Exiting."
+		exit 1
+	fi
 fi
 
 # Put the different stages of U-Boot into the right place.
@@ -88,6 +90,9 @@ fi
 if [ "$TYPE" = "sd" ]; then
 	UBOOT_DEVICE=${DEVICE}
 	UBOOT_OFFSET=1
+elif [ "$TYPE" = "mmcbootonly" ]; then
+	UBOOT_DEVICE=${DEVICE}
+	UBOOT_OFFSET=0
 else
 	UBOOT_DEVICE=${DEVICE}boot0
 	UBOOT_OFFSET=0
@@ -99,6 +104,11 @@ dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/tzsw.bin.hardkernel of=${UBOOT_DEVICE}
 
 # Clear out the environment.
 dd if=/dev/zero of=${DEVICE} seek=2560 count=32 bs=512 conv=sync
+
+if [ "$TYPE" = "mmcbootonly" ]; then
+	# The user asked us to only create the MMC boot partition, so exit.
+	exit 0
+fi
 
 # Create a /boot partition. Strictly speaking, almost everything could be loaded
 # from ext4, but using FAT is somehow traditional and less likely to be broken
