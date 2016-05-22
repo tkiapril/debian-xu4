@@ -188,7 +188,7 @@ cat <<EOF > /mnt/xu4/etc/grub.d/25_devicetree
 #! /bin/sh
 set -e
 
-# Hack added by prepare.sh when building the root image,
+# Hack added by mkimage.sh when building the root image,
 # to work around Debian bug #824399.
 echo "echo 'Loading device tree ...'"
 echo "devicetree /exynos5422-odroidxu4.dtb"
