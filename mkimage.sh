@@ -2,10 +2,6 @@
 
 # Install a bog-standard Debian bootable for ODROID XU3/XU4.
 #
-# Note: You will need u-boot-exynos >= 2016.05~rc3+dfsg1-1,
-# which at the time of writing is in experimental (it will
-# probably eventually hit stretch).
-#
 # Beware: This will ERASE ALL DATA on the target SD card
 # or MMC partition.
 #
