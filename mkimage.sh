@@ -198,9 +198,6 @@ echo "devicetree /exynos5422-odroidxu4.dtb"
 EOF
 chmod 0755 /mnt/xu4/etc/grub.d/25_devicetree
 
-# Work around Debian bug #823552.
-sed -i 's/\(GRUB_CMDLINE_LINUX_DEFAULT=".*\)"/\1 loglevel=4"/' /mnt/xu4/etc/default/grub 
-
 # Now we can create the GRUB boot menu.
 chroot /mnt/xu4 /usr/sbin/update-grub
 
