@@ -13,7 +13,7 @@
 set -e
 
 DEVICE=
-BOOTPART_MiB=256
+BOOTPART_MiB=512
 SUITE=stretch
 TYPE=sd
 
