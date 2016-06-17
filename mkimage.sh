@@ -130,7 +130,7 @@ vgcreate odroid ${DEVICE_STEM}2
 lvcreate -l 100%FREE -n root odroid
 
 # And the main filesystem.
-mkfs.ext4 /dev/odroid/root
+mkfs.ext4 -O ^metadata_csum /dev/odroid/root
 
 # Mount the filesystem and debootstrap into it.
 # isc-dhcp-client is, of course, not necessarily required, especially as
