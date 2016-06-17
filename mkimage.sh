@@ -196,6 +196,9 @@ echo ttySAC2 >> /mnt/xu4/etc/securetty
 # Work around Debian bug #825026.
 echo ledtrig-heartbeat >> /mnt/xu4/etc/modules
 
+# Enable serial getty and verbose boot log.
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttySAC2,115200n8"'/ /mnt/xu4/etc/default/grub
+
 # Install GRUB, chainloaded from U-Boot via UEFI.
 chroot /mnt/xu4 /usr/sbin/grub-install --removable --target=arm-efi --boot-directory=/boot --efi-directory=/boot
 
