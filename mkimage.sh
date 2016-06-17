@@ -194,7 +194,8 @@ chroot /mnt/xu4 /usr/sbin/grub-install --removable --target=arm-efi --boot-direc
 # flash-kernel can do this (if you also have u-boot-tools installed),
 # but it also includes its own boot script (which has higher priority than
 # GRUB) and just seems to lock up.
-cp $( find /mnt/xu4 -name exynos5422-odroidxu4.dtb ) /mnt/xu4/boot/
+DTB=exynos5422-$(cat /proc/device-tree/compatible | tr '\0' '\n' | grep -i hardkernel | sed 's/.*,//; s/-//').dtb
+cp $( find /mnt/xu4 -name $DTB ) /mnt/xu4/boot/
 
 # update-grub does not add “devicetree” statements for the
 # each kernel (not that it's copied from /usr/lib without
@@ -207,7 +208,7 @@ set -e
 # Hack added by mkimage.sh when building the root image,
 # to work around Debian bug #824399.
 echo "echo 'Loading device tree ...'"
-echo "devicetree /exynos5422-odroidxu4.dtb"
+echo "devicetree /$DTB"
 EOF
 chmod 0755 /mnt/xu4/etc/grub.d/25_devicetree
 
