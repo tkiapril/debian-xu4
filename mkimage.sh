@@ -129,22 +129,22 @@ mkfs.ext4 -O ^metadata_csum ${ROOT_PART}
 # isc-dhcp-client is, of course, not necessarily required, especially as
 # systemd-networkd is included and can do networking just fine, but most people
 # will probably find it very frustrating to install packages without it.
-mkdir -p /mnt/xu4/
-mount ${ROOT_PART} /mnt/xu4 -o rw,relatime,data=ordered
-mkdir /mnt/xu4/boot/
-mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,locales,sudo,openssh-server,screen,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
+mkdir -p /tmp/xu4/
+mount ${ROOT_PART} /tmp/xu4 -o rw,relatime,data=ordered
+mkdir /tmp/xu4/boot/
+mount ${BOOT_PART} /tmp/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
+debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,locales,sudo,openssh-server,screen,isc-dhcp-client --arch armhf ${SUITE} /tmp/xu4 "$@"
 
-mount proc /mnt/xu4//proc -t proc -o nosuid,noexec,nodev
-mount sys /mnt/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
-mount udev /mnt/xu4//dev -t devtmpfs -o mode=0755,nosuid
-mount devpts /mnt/xu4//dev/pts -t devpts -o mode=0620,gid=5,nosuid,noexec
-mount shm /mnt/xu4//dev/shm -t tmpfs -o mode=1777,nosuid,nodev
-mount run /mnt/xu4//run -t tmpfs -o nosuid,nodev,mode=0755
-mount tmp /mnt/xu4//tmp -t tmpfs -o mode=1777,strictatime,nodev,nosuid
+mount proc /tmp/xu4//proc -t proc -o nosuid,noexec,nodev
+mount sys /tmp/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
+mount udev /tmp/xu4//dev -t devtmpfs -o mode=0755,nosuid
+mount devpts /tmp/xu4//dev/pts -t devpts -o mode=0620,gid=5,nosuid,noexec
+mount shm /tmp/xu4//dev/shm -t tmpfs -o mode=1777,nosuid,nodev
+mount run /tmp/xu4//run -t tmpfs -o nosuid,nodev,mode=0755
+mount tmp /tmp/xu4//tmp -t tmpfs -o mode=1777,strictatime,nodev,nosuid
 
 # Enable persistent MAC address with systemd.link.
-cat <<EOF > /mnt/xu4/etc/systemd/network/10-eth0.link
+cat <<EOF > /tmp/xu4/etc/systemd/network/10-eth0.link
 [Match]
 OriginalName=eth0
 
@@ -152,19 +152,19 @@ OriginalName=eth0
 MACAddress=00:1E:06:$(od -tx1 -An -N3 /dev/random|awk '{print toupper($1), toupper($2), toupper($3)}'|tr \  :)
 EOF
 
-DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 dpkg --configure -a
+DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 dpkg --configure -a
 
 # Enable security updates, and apply any that might be waiting.
 if [ "$SUITE" != "unstable" ] && [ "$SUITE" != "sid" ]; then
-	echo "deb http://security.debian.org $SUITE/updates main" >> /mnt/xu4/etc/apt/sources.list
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt-get update
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt-get dist-upgrade
+	echo "deb http://security.debian.org $SUITE/updates main" >> /tmp/xu4/etc/apt/sources.list
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get update
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get dist-upgrade
 fi
 
 # Create an fstab (this is normally done by partconf, in d-i).
 BOOT_UUID=$( blkid -s UUID -o value ${BOOT_PART} )
 ROOT_UUID=$( blkid -s UUID -o value ${ROOT_PART} )
-cat <<EOF > /mnt/xu4/etc/fstab
+cat <<EOF > /tmp/xu4/etc/fstab
 # /etc/fstab: static file system information.
 #
 # Use 'blkid' to print the universally unique identifier for a
@@ -179,49 +179,51 @@ UUID=${BOOT_UUID}      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,
 EOF
 
 # Set a hostname.
-echo odroid > /mnt/xu4/etc/hostname
+echo odroid > /tmp/xu4/etc/hostname
 
 # Symlink local time zone.
-chroot /mnt/xu4 ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+chroot /tmp/xu4 ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 
 # Setup locale.
-sed -i 's/#\s*en_US.UTF-8/en_US.UTF-8/' /mnt/xu4/etc/locale.gen
-chroot /mnt/xu4 locale-gen
-chroot /mnt/xu4 update-locale $(chroot /mnt/xu4 locale | sed 's/\(.\+=\).\+/\1"en_US.UTF-8"/; s/LANG=/LANG="en_US.UTF-8"/' | tr '\n' ' ')
+sed -i 's/#\s*en_US.UTF-8/en_US.UTF-8/' /tmp/xu4/etc/locale.gen
+chroot /tmp/xu4 locale-gen
+chroot /tmp/xu4 update-locale $(chroot /tmp/xu4 locale | sed 's/\(.\+=\).\+/\1"en_US.UTF-8"/; s/LANG=/LANG="en_US.UTF-8"/' | tr '\n' ' ')
 
 # Setup vconsole.
-cat << EOF > /mnt/xu4/etc/vconsole.conf
+cat << EOF > /tmp/xu4/etc/vconsole.conf
 KEYMAP=us
 FONT=lat2-16
 EOF
 
 # Setup timesyncd.
-sed -i 's/#NTP=/NTP=/; s/\(NTP=.*\)\s*/\1ntp.nict.jp/' /mnt/xu4/etc/systemd/timesyncd.conf
+sed -i 's/#NTP=/NTP=/; s/\(NTP=.*\)\s*/\1ntp.nict.jp/' /tmp/xu4/etc/systemd/timesyncd.conf
 
 # Work around Debian bug #824391.
-echo ttySAC2 >> /mnt/xu4/etc/securetty
+echo ttySAC2 >> /tmp/xu4/etc/securetty
 
 # Work around Debian bug #825026.
-echo ledtrig-heartbeat >> /mnt/xu4/etc/modules
+echo ledtrig-heartbeat >> /tmp/xu4/etc/modules
 
 # Enable serial getty and verbose boot log.
-sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttySAC2,115200n8"'/ /mnt/xu4/etc/default/grub
+sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT=.*/GRUB_CMDLINE_LINUX_DEFAULT="console=ttySAC2,115200n8"'/ /tmp/xu4/etc/default/grub
 
 # Install GRUB, chainloaded from U-Boot via UEFI.
-chroot /mnt/xu4 /usr/sbin/grub-install --removable --target=arm-efi --boot-directory=/boot --efi-directory=/boot
+mount --bind /dev /tmp/xu4/dev
+mount --bind /proc /tmp/xu4/proc
+chroot /tmp/xu4 /usr/sbin/grub-install --removable --target=arm-efi --boot-directory=/boot --efi-directory=/boot
 
 # Get the device tree in place (we need it to load GRUB).
 # flash-kernel can do this (if you also have u-boot-tools installed),
 # but it also includes its own boot script (which has higher priority than
 # GRUB) and just seems to lock up.
 DTB=exynos5422-$(cat /proc/device-tree/compatible | tr '\0' '\n' | grep -i hardkernel | sed 's/.*,//; s/-//').dtb
-cp $( find /mnt/xu4 -name $DTB ) /mnt/xu4/boot/
+cp $( find /tmp/xu4 -name $DTB ) /tmp/xu4/boot/
 
 # update-grub does not add “devicetree” statements for the
 # each kernel (not that it's copied from /usr/lib without
 # flash-kernel anyway), so we need to explicitly load it
 # ourselves. See Debian bug #824399.
-cat <<EOF > /mnt/xu4/etc/grub.d/25_devicetree
+cat <<EOF > /tmp/xu4/etc/grub.d/25_devicetree
 #! /bin/sh
 set -e
 
@@ -230,25 +232,25 @@ set -e
 echo "echo 'Loading device tree ...'"
 echo "devicetree /$DTB"
 EOF
-chmod 0755 /mnt/xu4/etc/grub.d/25_devicetree
+chmod 0755 /tmp/xu4/etc/grub.d/25_devicetree
 
 # Now we can create the GRUB boot menu.
-chroot /mnt/xu4 /usr/sbin/update-grub
+chroot /tmp/xu4 /usr/sbin/update-grub
 
 # Set the root password. (It should be okay to have a dumb one as default,
 # since there's no ssh by default. Yet, it would be nice to have a way
 # to ask on first boot, or better yet, invoke debian-installer after boot.)
-echo root:odroid | chroot /mnt/xu4 /usr/sbin/chpasswd
+echo root:odroid | chroot /tmp/xu4 /usr/sbin/chpasswd
 
 # Zero any unused blocks on /boot, for better packing if we are to compress the
 # filesystem and publish it somewhere. (See below for the root device.)
 echo 'Please ignore the following error about full disk.'
-dd if=/dev/zero of=/mnt/xu4/boot/zerofill bs=1M || true
-rm -f /mnt/xu4/boot/zerofill
+dd if=/dev/zero of=/tmp/xu4/boot/zerofill bs=1M || true
+rm -f /tmp/xu4/boot/zerofill
 
 # All done, clean up.
-umount /mnt/xu4/dev
-umount -R /mnt/xu4
+umount /tmp/xu4/dev
+umount -R /tmp/xu4
 
 # The root file system is ext4, so we can use zerofree, which is
 # supposedly faster than dd-ing a zero file onto it.
