@@ -60,7 +60,7 @@ set -x
 # Prerequisites.
 echo deb http://httpredir.debian.org/debian experimental main >> /etc/apt/sources.list
 apt-get update
-apt-get install git parted dosfstools e2fsprogs debootstrap zerofree
+apt-get install git parted dosfstools e2fsprogs debootstrap
 apt-get -t experimental install u-boot-exynos
 
 # Get first stages of bootloader. (BL1 must be signed by Hardkernel,
@@ -242,16 +242,6 @@ chroot /tmp/xu4 /usr/sbin/update-grub
 # to ask on first boot, or better yet, invoke debian-installer after boot.)
 echo root:odroid | chroot /tmp/xu4 /usr/sbin/chpasswd
 
-# Zero any unused blocks on /boot, for better packing if we are to compress the
-# filesystem and publish it somewhere. (See below for the root device.)
-echo 'Please ignore the following error about full disk.'
-dd if=/dev/zero of=/tmp/xu4/boot/zerofill bs=1M || true
-rm -f /tmp/xu4/boot/zerofill
-
 # All done, clean up.
 umount /tmp/xu4/dev
 umount -R /tmp/xu4
-
-# The root file system is ext4, so we can use zerofree, which is
-# supposedly faster than dd-ing a zero file onto it.
-zerofree -v ${ROOT_PART}
