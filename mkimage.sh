@@ -133,7 +133,7 @@ mkdir -p /mnt/xu4/
 mount ${ROOT_PART} /mnt/xu4 -o rw,relatime,data=ordered
 mkdir /mnt/xu4/boot/
 mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
+debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,locales,sudo,openssh-server,screen,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
 
 mount proc /mnt/xu4//proc -t proc -o nosuid,noexec,nodev
 mount sys /mnt/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
@@ -180,6 +180,23 @@ EOF
 
 # Set a hostname.
 echo odroid > /mnt/xu4/etc/hostname
+
+# Symlink local time zone.
+chroot /mnt/xu4 ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
+
+# Setup locale.
+sed -i 's/#\s*en_US.UTF-8/en_US.UTF-8/' /mnt/xu4/etc/locale.gen
+chroot /mnt/xu4 locale-gen
+chroot /mnt/xu4 update-locale $(chroot /mnt/xu4 locale | sed 's/\(.\+=\).\+/\1"en_US.UTF-8"/; s/LANG=/LANG="en_US.UTF-8"/' | tr '\n' ' ')
+
+# Setup vconsole.
+cat << EOF > /mnt/xu4/etc/vconsole.conf
+KEYMAP=us
+FONT=lat2-16
+EOF
+
+# Setup timesyncd.
+sed -i 's/#NTP=/NTP=/; s/\(NTP=.*\)\s*/\1ntp.nict.jp/' /mnt/xu4/etc/systemd/timesyncd.conf
 
 # Work around Debian bug #824391.
 echo ttySAC2 >> /mnt/xu4/etc/securetty
