@@ -59,8 +59,10 @@ set -x
 
 # Prerequisites.
 dpkg --add-architecture armhf
+echo deb http://httpredir.debian.org/debian experimental main >> /etc/apt/sources.list
 apt-get update
-apt-get install git parted dosfstools e2fsprogs binfmt-support qemu qemu-user-static debootstrap zerofree u-boot-exynos:armhf
+apt-get install git parted dosfstools e2fsprogs binfmt-support qemu qemu-user-static debootstrap zerofree
+apt-get -t experimental install u-boot-exynos:armhf
 
 # Get first stages of bootloader. (BL1 must be signed by Hardkernel,
 # and TZSW comes without source anyway, so we can't build these ourselves)
