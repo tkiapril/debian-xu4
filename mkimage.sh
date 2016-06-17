@@ -50,6 +50,11 @@ if [ "$TYPE" != "sd" ] && [ "$TYPE" != "mmc" ] && [ "$TYPE" != "mmcbootonly" ]; 
 	exit 1
 fi
 
+if [ $UID != 0 ]; then
+	echo "This script has to be run by root."
+	exit 1
+fi
+
 set -x
 
 # Prerequisites.
