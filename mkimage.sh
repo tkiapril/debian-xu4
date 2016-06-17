@@ -75,7 +75,7 @@ if [ "$TYPE" != "mmcbootonly" ]; then
 	parted ${DEVICE} mklabel msdos
 	parted ${DEVICE} mkpart primary fat32 2MB $(( BOOTPART_MB + 2 ))MB
 	parted ${DEVICE} set 1 boot on
-	parted ${DEVICE} mkpart primary ext2 $(( BOOTPART_MB + 2))MB 100%
+	parted ${DEVICE} mkpart primary ext4 $(( BOOTPART_MB + 2))MB 100%
 
 	# Figure out if the partitions are of type ${DEVICE}1 or ${DEVICE}p1.
 	if [ -b "${DEVICE}1" ]; then
@@ -121,25 +121,19 @@ fi
 BOOT_PART=${DEVICE_STEM}1
 mkfs.vfat -F 32 ${BOOT_PART}
 
-# Put an LVM on the other partition; it's easier to deal with when expanding
-# partitions or otherwise moving them around.
-vgchange -a n odroid || true  # Could be left around from a previous copy of the partition.
-pvcreate -ff ${DEVICE_STEM}2
-vgcreate odroid ${DEVICE_STEM}2
-lvcreate -l 100%FREE -n root odroid
-
 # And the main filesystem.
-mkfs.ext4 -O ^metadata_csum /dev/odroid/root
+ROOT_PART=${DEVICE_STEM}2
+mkfs.ext4 -O ^metadata_csum ${ROOT_PART}
 
 # Mount the filesystem and debootstrap into it.
 # isc-dhcp-client is, of course, not necessarily required, especially as
 # systemd-networkd is included and can do networking just fine, but most people
 # will probably find it very frustrating to install packages without it.
 mkdir -p /mnt/xu4/
-mount /dev/odroid/root /mnt/xu4 -o rw,relatime,data=ordered
+mount ${ROOT_PART} /mnt/xu4 -o rw,relatime,data=ordered
 mkdir /mnt/xu4/boot/
 mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
+debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
 
 mount proc /mnt/xu4//proc -t proc -o nosuid,noexec,nodev
 mount sys /mnt/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
@@ -169,6 +163,7 @@ fi
 
 # Create an fstab (this is normally done by partconf, in d-i).
 BOOT_UUID=$( blkid -s UUID -o value ${BOOT_PART} )
+ROOT_UUID=$( blkid -s UUID -o value ${ROOT_PART} )
 cat <<EOF > /mnt/xu4/etc/fstab
 # /etc/fstab: static file system information.
 #
@@ -177,7 +172,7 @@ cat <<EOF > /mnt/xu4/etc/fstab
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-/dev/odroid/root	/         	ext4      	rw,relatime,data=ordered	0 1
+UUID=${ROOT_UUID}	/         	ext4      	rw,relatime,data=ordered	0 1
 
 UUID=${BOOT_UUID}      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro	0 2
 
@@ -240,6 +235,4 @@ umount -R /mnt/xu4
 
 # The root file system is ext4, so we can use zerofree, which is
 # supposedly faster than dd-ing a zero file onto it.
-zerofree -v /dev/odroid/root
-
-vgchange -a n odroid
+zerofree -v ${ROOT_PART}
