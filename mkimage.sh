@@ -154,9 +154,12 @@ DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAG
 # Enable security updates, and apply any that might be waiting.
 if [ "$SUITE" != "unstable" ] && [ "$SUITE" != "sid" ]; then
 	echo "deb http://security.debian.org $SUITE/updates main" >> /tmp/xu4/etc/apt/sources.list
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get update
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get dist-upgrade
 fi
+echo deb http://httpredir.debian.org/debian experimental main >> /tmp/xu4/etc/apt/sources.list
+DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get update
+DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get dist-upgrade
+DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get -t experimental install neovim
+chroot /tmp/xu4 update-alternatives --set editor /usr/bin/nvim
 
 # Create an fstab (this is normally done by partconf, in d-i).
 BOOT_UUID=$( blkid -s UUID -o value ${BOOT_PART} )
