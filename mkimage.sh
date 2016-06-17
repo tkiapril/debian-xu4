@@ -126,14 +126,11 @@ ROOT_PART=${DEVICE_STEM}2
 mkfs.ext4 -O ^metadata_csum ${ROOT_PART}
 
 # Mount the filesystem and debootstrap into it.
-# isc-dhcp-client is, of course, not necessarily required, especially as
-# systemd-networkd is included and can do networking just fine, but most people
-# will probably find it very frustrating to install packages without it.
 mkdir -p /tmp/xu4/
 mount ${ROOT_PART} /tmp/xu4 -o rw,relatime,data=ordered
 mkdir /tmp/xu4/boot/
 mount ${BOOT_PART} /tmp/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,locales,sudo,openssh-server,screen,isc-dhcp-client --arch armhf ${SUITE} /tmp/xu4 "$@"
+debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,locales,sudo,openssh-server,screen --arch armhf ${SUITE} /tmp/xu4 "$@"
 
 mount proc /tmp/xu4//proc -t proc -o nosuid,noexec,nodev
 mount sys /tmp/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
