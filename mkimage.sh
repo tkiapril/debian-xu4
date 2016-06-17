@@ -224,10 +224,7 @@ rm -f /mnt/xu4/boot/zerofill
 # All done, clean up.
 umount /mnt/xu4/dev
 rm /mnt/xu4/usr/bin/qemu-arm-static
-umount /mnt/xu4/dev
-umount /mnt/xu4/proc
-umount /mnt/xu4/boot
-umount /mnt/xu4
+umount -R /mnt/xu4
 
 # The root file system is ext4, so we can use zerofree, which is
 # supposedly faster than dd-ing a zero file onto it.
