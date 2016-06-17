@@ -150,6 +150,15 @@ mount shm /mnt/xu4//dev/shm -t tmpfs -o mode=1777,nosuid,nodev
 mount run /mnt/xu4//run -t tmpfs -o nosuid,nodev,mode=0755
 mount tmp /mnt/xu4//tmp -t tmpfs -o mode=1777,strictatime,nodev,nosuid
 
+# Enable persistent MAC address with systemd.link.
+cat <<EOF > /mnt/xu4/etc/systemd/network/10-eth0.link
+[Match]
+OriginalName=eth0
+
+[Link]
+MACAddress=00:1E:06:$(od -tx1 -An -N3 /dev/random|awk '{print toupper($1), toupper($2), toupper($3)}'|tr \  :)
+EOF
+
 # Run the second stage debootstrap under qemu (via binfmt_misc).
 cp /usr/bin/qemu-arm-static /mnt/xu4/usr/bin/
 DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 /debootstrap/debootstrap --second-stage
