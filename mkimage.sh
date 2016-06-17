@@ -97,6 +97,7 @@ elif [ "$TYPE" = "mmcbootonly" ]; then
 	UBOOT_OFFSET=0
 else
 	UBOOT_DEVICE=${DEVICE}boot0
+	echo 0 > /sys/block/$(echo $UBOOT_DEVICE | sed 's|/dev/||')/force_ro
 	UBOOT_OFFSET=0
 fi
 dd if=u-boot/sd_fuse/hardkernel_1mb_uboot/bl1.bin.hardkernel of=${UBOOT_DEVICE} seek=${UBOOT_OFFSET} conv=sync
