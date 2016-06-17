@@ -58,11 +58,10 @@ fi
 set -x
 
 # Prerequisites.
-dpkg --add-architecture armhf
 echo deb http://httpredir.debian.org/debian experimental main >> /etc/apt/sources.list
 apt-get update
-apt-get install git parted dosfstools e2fsprogs binfmt-support qemu qemu-user-static debootstrap zerofree
-apt-get -t experimental install u-boot-exynos:armhf
+apt-get install git parted dosfstools e2fsprogs debootstrap zerofree
+apt-get -t experimental install u-boot-exynos
 
 # Get first stages of bootloader. (BL1 must be signed by Hardkernel,
 # and TZSW comes without source anyway, so we can't build these ourselves)
@@ -140,7 +139,7 @@ mkdir -p /mnt/xu4/
 mount /dev/odroid/root /mnt/xu4 -o rw,relatime,data=ordered
 mkdir /mnt/xu4/boot/
 mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
-debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --foreign --arch armhf ${SUITE} /mnt/xu4 "$@"
+debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --arch armhf ${SUITE} /mnt/xu4 "$@"
 
 mount proc /mnt/xu4//proc -t proc -o nosuid,noexec,nodev
 mount sys /mnt/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
@@ -159,9 +158,6 @@ OriginalName=eth0
 MACAddress=00:1E:06:$(od -tx1 -An -N3 /dev/random|awk '{print toupper($1), toupper($2), toupper($3)}'|tr \  :)
 EOF
 
-# Run the second stage debootstrap under qemu (via binfmt_misc).
-cp /usr/bin/qemu-arm-static /mnt/xu4/usr/bin/
-DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 /debootstrap/debootstrap --second-stage
 DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 dpkg --configure -a
 
 # Enable security updates, and apply any that might be waiting.
@@ -240,7 +236,6 @@ rm -f /mnt/xu4/boot/zerofill
 
 # All done, clean up.
 umount /mnt/xu4/dev
-rm /mnt/xu4/usr/bin/qemu-arm-static
 umount -R /mnt/xu4
 
 # The root file system is ext4, so we can use zerofree, which is
