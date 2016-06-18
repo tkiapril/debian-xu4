@@ -170,8 +170,10 @@ cat <<EOF > /mnt/xu4/etc/fstab
 # that works even if disks are added and removed. See fstab(5).
 #
 # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-/dev/odroid/root / ext4 errors=remount-ro 0 1
-UUID=${BOOT_UUID} /boot vfat defaults 0 2
+/dev/odroid/root	/         	ext4      	rw,relatime,data=ordered	0 1
+
+UUID=${BOOT_UUID}      	/boot     	vfat      	rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro	0 2
+
 EOF
 
 # Set a hostname.
