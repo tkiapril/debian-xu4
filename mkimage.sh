@@ -237,10 +237,9 @@ chmod 0755 /tmp/xu4/etc/grub.d/25_devicetree
 # Now we can create the GRUB boot menu.
 chroot /tmp/xu4 /usr/sbin/update-grub
 
-# Set the root password. (It should be okay to have a dumb one as default,
-# since there's no ssh by default. Yet, it would be nice to have a way
-# to ask on first boot, or better yet, invoke debian-installer after boot.)
-echo root:odroid | chroot /tmp/xu4 /usr/sbin/chpasswd
+# Remove root password, a blank password will suffice
+# while setting the users up.
+chroot /tmp/xu4 /usr/bin/passwd -d root
 
 # All done, clean up.
 umount /tmp/xu4/dev
