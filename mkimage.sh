@@ -58,7 +58,6 @@ fi
 set -x
 
 # Prerequisites.
-echo deb http://httpredir.debian.org/debian experimental main >> /etc/apt/sources.list
 apt-get update
 apt-get install git parted dosfstools e2fsprogs debootstrap
 apt-get -t experimental install u-boot-exynos
