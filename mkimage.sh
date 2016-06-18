@@ -13,14 +13,14 @@
 set -e
 
 DEVICE=
-BOOTPART_MB=256
+BOOTPART_MiB=256
 SUITE=stretch
 TYPE=sd
 
 while getopts "b:s:t:" opt; do
 	case $opt in
 		b)
-			BOOTPART_MB=$OPTARG
+			BOOTPART_MiB=$OPTARG
 			;;
 		s)
 			# Sorry, jessie won't work; the kernel doesn't support XU3/XU4.
@@ -73,9 +73,9 @@ fi
 if [ "$TYPE" != "mmcbootonly" ]; then
 	# Partition the device.
 	parted ${DEVICE} mklabel msdos
-	parted ${DEVICE} mkpart primary fat32 2MB $(( BOOTPART_MB + 2 ))MB
+	parted ${DEVICE} mkpart primary fat32 2MiB $(( BOOTPART_MiB + 2 ))MiB
 	parted ${DEVICE} set 1 boot on
-	parted ${DEVICE} mkpart primary ext4 $(( BOOTPART_MB + 2))MB 100%
+	parted ${DEVICE} mkpart primary ext4 $(( BOOTPART_MiB + 2))MiB 100%
 
 	# Figure out if the partitions are of type ${DEVICE}1 or ${DEVICE}p1.
 	if [ -b "${DEVICE}1" ]; then
