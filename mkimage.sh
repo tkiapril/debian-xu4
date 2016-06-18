@@ -59,8 +59,8 @@ set -x
 
 # Prerequisites.
 apt-get update
-apt-get install git parted dosfstools e2fsprogs debootstrap
-apt-get -t experimental install u-boot-exynos
+apt-get install -y git parted dosfstools e2fsprogs debootstrap
+apt-get -t experimental -y install u-boot-exynos
 
 # Get first stages of bootloader. (BL1 must be signed by Hardkernel,
 # and TZSW comes without source anyway, so we can't build these ourselves)
@@ -157,7 +157,7 @@ fi
 echo deb http://httpredir.debian.org/debian experimental main >> /tmp/xu4/etc/apt/sources.list
 DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get update
 DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get dist-upgrade
-DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get -t experimental install neovim
+DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /tmp/xu4 apt-get -t experimental -y install neovim
 chroot /tmp/xu4 update-alternatives --set editor /usr/bin/nvim
 
 # Create an fstab (this is normally done by partconf, in d-i).
