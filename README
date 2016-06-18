@@ -1,30 +1,9 @@
 This is a fork of https://git.sesse.net/?p=debian-xu4.
 
-These are images for the ODROID XU3/XU4, built as close as possible 
-to unmodified Debian. They will only be updated every now and then,
-so if you want something current, run the script to build them yourself.
-The image is signed with my GnuPG key; you can find the key in the
-Debian keyring.
+Tips: If you use both SD Card and eMMC for OS, initially you will boot to the opposite media you selected with the switch.
+This is due to a strange default in boot_targets env ( https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=827580 ).
+In order to work this out, you need a serial console; on boot, repeatadly and rapidly press any key to abort u-boot boot. Then, modify boot_targets to have mmc0 on first (e.g. env set boot_targets mmc0 mmc1 pxe dhcp) then save (env save).
+Unfortunately, this solution only works if you select SD Card as boot device; saveenv does not work on eMMC boot ( https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=827581 ).
+In my case where I use eMMC as main and SD Card as backup, I use SD Card as boot media with default env and change env only on occations when I have to boot to SD Card.
 
-The prebuilt images are made for 1GB cards, so they should fit onto
-pretty much any modern SD or MMC card. Root images built for SD cards
-will fit work on MMC devices but not the other way round (the prebuilt
-root images are for SD).
-
-If you want to update the boot partition of an eMMC device (where
-U-Boot lives), you will need to unlock it before Linux lets you
-write to it, e.g.:
-
-  echo 0 > /sys/block/mmcblk0boot0/force_ro
-
-SD cards do not have hardware partitions (U-Boot is stored on the same
-block device as everything else), so all you need to do is to decompress
-the image and dd it to the card.
-
-
-Prebuilt images: https://storage.sesse.net/debian-xu4/
 ODROID forum thread: http://forum.odroid.com/viewtopic.php?f=96&t=21256
-Latest version of the build script: https://git.sesse.net/?p=debian-xu4;a=blob_plain;f=mkimage.sh;hb=HEAD
-git repository for the build script: https://git.sesse.net/?p=debian-xu4
-
-  - Steinar H. Gunderson <sesse@debian.org>
