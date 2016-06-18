@@ -6,7 +6,8 @@
 # or MMC partition.
 #
 #
-# Copyright 2016 Steinar H. Gunderson <steinar+odroid@gunderson.no>.
+# Original Work Copyright 2016 Steinar H. Gunderson <steinar+odroid@gunderson.no>.
+# Derived Work Copyright 2016 Seo, Myunggyun <tki@tkism.org>.
 # Licensed under the GNU GPL, v2 or (at your option) any later version.
 
 set -e
