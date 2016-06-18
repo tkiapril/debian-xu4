@@ -1,3 +1,5 @@
+This is a fork of https://git.sesse.net/?p=debian-xu4.
+
 These are images for the ODROID XU3/XU4, built as close as possible 
 to unmodified Debian. They will only be updated every now and then,
 so if you want something current, run the script to build them yourself.
