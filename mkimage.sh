@@ -140,6 +140,14 @@ mkdir /mnt/xu4/boot/
 mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
 debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --foreign --arch armhf ${SUITE} /mnt/xu4 "$@"
 
+mount proc /mnt/xu4//proc -t proc -o nosuid,noexec,nodev
+mount sys /mnt/xu4//sys -t sysfs -o nosuid,noexec,nodev,ro
+mount udev /mnt/xu4//dev -t devtmpfs -o mode=0755,nosuid
+mount devpts /mnt/xu4//dev/pts -t devpts -o mode=0620,gid=5,nosuid,noexec
+mount shm /mnt/xu4//dev/shm -t tmpfs -o mode=1777,nosuid,nodev
+mount run /mnt/xu4//run -t tmpfs -o nosuid,nodev,mode=0755
+mount tmp /mnt/xu4//tmp -t tmpfs -o mode=1777,strictatime,nodev,nosuid
+
 # Run the second stage debootstrap under qemu (via binfmt_misc).
 cp /usr/bin/qemu-arm-static /mnt/xu4/usr/bin/
 DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 /debootstrap/debootstrap --second-stage
@@ -176,8 +184,6 @@ echo ttySAC2 >> /mnt/xu4/etc/securetty
 echo ledtrig-heartbeat >> /mnt/xu4/etc/modules
 
 # Install GRUB, chainloaded from U-Boot via UEFI.
-mount --bind /dev /mnt/xu4/dev
-mount --bind /proc /mnt/xu4/proc
 chroot /mnt/xu4 /usr/sbin/grub-install --removable --target=arm-efi --boot-directory=/boot --efi-directory=/boot
 
 # Get the device tree in place (we need it to load GRUB).
@@ -216,6 +222,7 @@ dd if=/dev/zero of=/mnt/xu4/boot/zerofill bs=1M || true
 rm -f /mnt/xu4/boot/zerofill
 
 # All done, clean up.
+umount /mnt/xu4/dev
 rm /mnt/xu4/usr/bin/qemu-arm-static
 umount /mnt/xu4/dev
 umount /mnt/xu4/proc
