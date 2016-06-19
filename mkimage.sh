@@ -59,8 +59,8 @@ set -x
 
 # Prerequisites.
 dpkg --add-architecture armhf
-apt update
-apt install git parted dosfstools e2fsprogs binfmt-support qemu qemu-user-static debootstrap zerofree u-boot-exynos:armhf
+apt-get update
+apt-get install git parted dosfstools e2fsprogs binfmt-support qemu qemu-user-static debootstrap zerofree u-boot-exynos:armhf
 
 # Get first stages of bootloader. (BL1 must be signed by Hardkernel,
 # and TZSW comes without source anyway, so we can't build these ourselves)
@@ -156,8 +156,8 @@ DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAG
 # Enable security updates, and apply any that might be waiting.
 if [ "$SUITE" != "unstable" ] && [ "$SUITE" != "sid" ]; then
 	echo "deb http://security.debian.org $SUITE/updates main" >> /mnt/xu4/etc/apt/sources.list
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt update
-	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt dist-upgrade
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt-get update
+	DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true LC_ALL=C LANGUAGE=C LANG=C chroot /mnt/xu4 apt-get dist-upgrade
 fi
 
 # Create an fstab (this is normally done by partconf, in d-i).
