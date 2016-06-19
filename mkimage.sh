@@ -243,3 +243,4 @@ chroot /tmp/xu4 /usr/bin/passwd -d root
 # All done, clean up.
 umount /tmp/xu4/dev
 umount -R /tmp/xu4
+echo "All done!"
