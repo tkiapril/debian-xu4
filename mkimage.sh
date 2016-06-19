@@ -135,9 +135,9 @@ mkfs.ext4 /dev/odroid/root
 # systemd-networkd is included and can do networking just fine, but most people
 # will probably find it very frustrating to install packages without it.
 mkdir -p /mnt/xu4/
-mount /dev/odroid/root /mnt/xu4
+mount /dev/odroid/root /mnt/xu4 -o rw,relatime,data=ordered
 mkdir /mnt/xu4/boot/
-mount ${BOOT_PART} /mnt/xu4/boot
+mount ${BOOT_PART} /mnt/xu4/boot -o rw,relatime,fmask=0022,dmask=0022,codepage=437,iocharset=iso8859-1,shortname=mixed,errors=remount-ro
 debootstrap --include=linux-image-armmp-lpae,grub-efi-arm,lvm2,isc-dhcp-client --foreign --arch armhf ${SUITE} /mnt/xu4 "$@"
 
 # Run the second stage debootstrap under qemu (via binfmt_misc).
